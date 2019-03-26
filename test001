@@ -1,0 +1,96 @@
+logging:
+  level:
+    ROOT: INFO
+properties:
+  application:
+    name: selection.service
+
+spring:
+  datasource:
+    name: test
+    url: jdbc:sqlserver://127.0.0.1;databasename=KFC_2016_NEW;sendStringParametersAsUnicode=false;
+    username: 'sa'
+    password: 'root123'
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    pool-name: testpool
+    maximum-pool-size: 120
+    minimum-idle: 15
+    idle-timeout: 300000
+    type: com.yum.ec3.base.datasource.CommonDataSource
+  cloud:
+    loadbalancer:
+      retry:
+        enabled: true
+  sleuth:
+    stream: 
+      enabled: false
+  rabbitmq:
+    listener:
+      retry:
+        enabled: true
+        max-attempts: 5
+    hostsMap: 
+      lb:
+        hosts:
+        - {hosts: '10.30.5.34:5672', id: a, password: 'guest', username: guest}
+        id: lb
+
+  redis:
+    resources:
+      defaultInstance: instance1
+      config:
+        instance1:
+          nodes:
+          - 127.0.0.1:26379
+          - 127.0.0.1:26380
+          - 127.0.0.1:26381
+          masterName: mymaster
+          dbIndex: 7
+          maxTotal: 7
+          minIdle: 300
+          maxIdle: 500
+          maxWaitMillis: 1000
+          testOnBorrow: true
+          testOnCreate: true
+          testOnReturn: true
+          # Idle时进行连接扫描
+          testWhileIdle: true
+          # 表示idle object evitor两次扫描之间要sleep的毫秒数
+          timeBetweenEvictionRunsMillis: 30000
+          # 表示idle object evitor每次扫描的最多的对象数
+          numTestsPerEvictionRun: 10
+          # 表示一个对象至少停留在idle状态的最短时间，然后才能被idle object evitor扫描并驱逐；这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义
+          minEvictableIdleTimeMillis: 60000
+
+webId: superapp
+
+#MQ相关配置
+mq:
+  #延迟队列超时时间(单位:秒 ,默认60秒)
+  ttlSecond: 30
+  #队列消费重试次数：默认3次
+  maxErrorCount: 3
+  #初始有多少个消费端(默认2)
+  concurrent.consumers: 3
+  #最多允许多少个消费端(默认20)
+  maxconcurrent.consumers: 50
+  #一次取多少数据处理(默认10条)
+  prefetch.count: 10
+
+#主档信息导入目录地址
+import:
+  #手动导入数据文件的绝对路径配置
+  manualDataPath: '/opt/tmp/master/selectionMasterData.xls'
+  #每日导入数据文件的绝对路径配置
+  dailyDataPath: '/opt/tmp/prevTime/selectionPrevTime.xls'
+  #每日导入数据文件的定时任务时间表达式配置
+  dailyDataExecCron: '0 0 1 * * ?'
+
+#调用message服务推送各环境MQ的重试和超时设置
+message.service:
+  ribbon:
+    MaxAutoRetries: 1
+    MaxAutoRetriesNextServer: 0
+    ReadTimeout: 3000
+    ConnectTimeout: 1000
+  fallback-host: 10.30.10.103:2445
